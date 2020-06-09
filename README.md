@@ -4,7 +4,7 @@
 
 **Title:** Distinct waves from the hemogenic endothelium give rise to layered Lymphoid Tissue Inducer cell ontogeny.
 
-**Authors:** Milesa Simic 1, Iris Manosalva 1, Lionel Spinelli 1 , Rebecca Gentek 1&, Raheleh R. Shayan 1, Carole Siret 1, Mathilde Girard-Madoux 1, Shuaiwei Wang 1, Lauriane de Fabritus 1, Janneke Verschoor 1, Yann M. Kerdiles 1, Marc Bajenoff 1, Ralf Stumm 2, Rachel Golub 3, Serge A. van de Pavert 1*
+**Authors:** Milesa Simic 1, Iris Manosalva 1, Lionel Spinelli 1 , Rebecca Gentek 1&, Raheleh R. Shayan 1, Carole Siret 1, Mathilde Girard-Madoux 1, Shuaiwei Wang 1, Lauriane de Fabritus 1, Janneke Verschoor 1, Yann M. Kerdiles 1, Marc Bajenoff 1, Ralf Stumm 2, Rachel Golub 3, Serge A. van de Pavert 1%
 
 1 Aix-Marseille Univ, Centre National de la Recherche Scientifique (CNRS), Institut National de la Santé et de la Recherche Médicale (INSERM), Centre d'Immunologie de Marseille-Luminy (CIML), Marseille, France.
 
@@ -14,7 +14,7 @@
 
 & Currently at at Centre for Inflammation Research (CIR), Institute of Regeneration and Repair, University of Edinburgh, Edinburgh, United Kingdom
 
-* Corresponding author: E-mail: vandepavert@ciml.univ-mrs.fr
+% Corresponding author: E-mail: vandepavert@ciml.univ-mrs.fr
 
 **Summary:**
 During embryogenesis Lymphoid Tissue Inducer (LTi) cells are essential for lymph node organogenesis. These cells are part of the Innate Lymphoid Cell (ILC) family. Although their earliest embryonic hematopoietic origin is unclear, other innate immune cells were shown to be derived from both early hemogenic endothelium in the yolk-sac as well as the aorta-gonad-mesonephros. A proper model to discriminate between these locations was unavailable. In this study, using a new lineage tracing model, we identified LTi progenitors from the early aorta-gonad-mesonephros, and excluded hematopoiesis from yolk-sac or contribution from the later hematopoietic stem cell wave. Conversely, embryonic LTi cells were replaced by hematopoietic stem cell derived cells in adult. We further showed that within the fetal liver common lymphoid progenitors differentiate into highly dynamic alpha-lymphoid precursor cells, which at this embryonic stage preferentially matured into LTi precursors and established their functional LTi cell identity only after reaching the periphery.
@@ -35,12 +35,12 @@ To reproduce the analysis, you have to first, prepare the environments (see "Pre
 
 As described in the article, there is 5 datasets in this study. One datset is a bulk sequencing of mRNA on two embryo tissues (Fetal Liver and Periphery) at stage 13.5 days. The other 4 datasets are single-cell sequencing of mRNA on two embryo tissues (Fetal Liver and Periphery) and two stages (13.5 and 14.5 days). When downloading the code and data, you will obtains 5 sub-folders with names as below:
 
-BecomingLTi
-├── Embryo_Bulk_Stage13.5_2tissues : Bulk RNA-seq of Embryo Fetal Liver and periphery tissues at stage 13.5 days
-├── Embryo_Stage13.5_FetalLiver : Single-cell RNA-seq of Embryo Fetal Liver tissue at stage 13.5 days
-├── Embryo_Stage13.5_Periphery_CellRangerV3 : Single-cell RNA-seq of Embryo Periphery tissue at stage 13.5 days
-├── Embryo_Stage14.5_FetalLiver :  : Single-cell RNA-seq of Embryo Fetal Liver tissue at stage 14.5 days
-└── Embryo_Stage14.5_Periphery_CellRangerV3 : Single-cell RNA-seq of Embryo Periphery tissue at stage 14.5 days
+    BecomingLTi
+    ├── Embryo_Bulk_Stage13.5_2tissues : Bulk RNA-seq of Embryo Fetal Liver and periphery tissues at stage 13.5 days
+    ├── Embryo_Stage13.5_FetalLiver : Single-cell RNA-seq of Embryo Fetal Liver tissue at stage 13.5 days
+    ├── Embryo_Stage13.5_Periphery_CellRangerV3 : Single-cell RNA-seq of Embryo Periphery tissue at stage 13.5 days
+    ├── Embryo_Stage14.5_FetalLiver :  : Single-cell RNA-seq of Embryo Fetal Liver tissue at stage 14.5 days
+    └── Embryo_Stage14.5_Periphery_CellRangerV3 : Single-cell RNA-seq of Embryo Periphery tissue at stage 14.5 days
 
 ---
 ---
@@ -88,17 +88,17 @@ Each sample needs its own "00_RawData" sub-folder containing the initial data us
 
 Once done, you may obtain the following subfolder structure, each of them containing several files.
 
-BecomingLTi
-├── Embryo_Bulk_Stage13.5_2tissues
-│   └── 00_RawData
-├── Embryo_Stage13.5_FetalLiver
-│   └── 00_RawData
-├── Embryo_Stage13.5_Periphery_CellRangerv3
-│   └── 00_RawData
-├── Embryo_Stage14.5_FetalLiver
-│   └── 00_RawData
-└── Embryo_Stage14.5_Periphery_CellRangerv3
-    └── 00_RawData
+    BecomingLTi
+    ├── Embryo_Bulk_Stage13.5_2tissues
+    │   └── 00_RawData
+    ├── Embryo_Stage13.5_FetalLiver
+    │   └── 00_RawData
+    ├── Embryo_Stage13.5_Periphery_CellRangerv3
+    │   └── 00_RawData
+    ├── Embryo_Stage14.5_FetalLiver
+    │   └── 00_RawData
+    └── Embryo_Stage14.5_Periphery_CellRangerv3
+        └── 00_RawData
 
 ### Download the reference files
 
@@ -114,16 +114,18 @@ Note: Since the reference files are used for the 4 single-cell samples analysis,
     ln -s Embryo_Stage13.5_FetalLiver/01_Reference Embryo_Stage13.5_Periphery_CellRangerV3/01_Reference
     ln -s Embryo_Stage13.5_FetalLiver/01_Reference Embryo_Stage14.5_FetalLiver/01_Reference
     ln -s Embryo_Stage13.5_FetalLiver/01_Reference Embryo_Stage14.5_Periphery_CellRangerV3/01_Reference
-    
-BecomingLTi
-├── Embryo_Stage13.5_FetalLiver
-│   └── 01_Reference
-├── Embryo_Stage13.5_Periphery_CellRangerv3
-│   └── 01_Reference
-├── Embryo_Stage14.5_FetalLiver
-│   └── 01_Reference
-└── Embryo_Stage14.5_Periphery_CellRangerv3
-    └── 01_Reference
+
+These commands will create 4 sub-folders named 01_Reference:
+
+    BecomingLTi
+    ├── Embryo_Stage13.5_FetalLiver
+    │   └── 01_Reference
+    ├── Embryo_Stage13.5_Periphery_CellRangerv3
+    │   └── 01_Reference
+    ├── Embryo_Stage14.5_FetalLiver
+    │   └── 01_Reference
+    └── Embryo_Stage14.5_Periphery_CellRangerv3
+        └── 01_Reference
 
 ### Download the Docker and Singularity images
 
@@ -135,13 +137,13 @@ Docker image tar file and Singularity img files are stored on Zenodo. Open a she
     wget URL/SPlab_BecomingLTi_02_containers.tar.gz
     tar zxvf SPlab_BecomingLTi_02_containers.tar.gz
 
-These command will create 4 sub-folders named 01_Reference:
+These commands will create 2 sub-folders named 02_Container:
 
-BecomingLTi
-├── Embryo_Bulk_Stage13.5_2tissues
-│   └── 02_Container
-└── Embryo_Stage13.5_FetalLiver
-    └── 02_Container
+    BecomingLTi
+    ├── Embryo_Bulk_Stage13.5_2tissues
+    │   └── 02_Container
+    └── Embryo_Stage13.5_FetalLiver
+        └── 02_Container
 
 The first one contains a Docker image tar file used for the bulk RNA-seq analysis. The second one contains the Singularity images for the single-cell RNA-seq analysis. Since the singularity images are used for the 4 single-cell samples analysis, they must be present in all the sample folder in the same 02_Container subfolder. Instead of copying the image files, we will create symbolic links:
 
