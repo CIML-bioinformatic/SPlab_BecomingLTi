@@ -1,0 +1,212 @@
+---
+title: "SPlab - ILC you project Primary Analysis"
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    #dev: "pdf"
+    self_contained: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE)
+```
+
+```{r loadLibraries, echo=FALSE, warning=FALSE, message=FALSE}
+library( DESeq2)
+library( ggplot2)
+library( ggrepel)
+library( xtable)
+library( stringr)
+library( biomaRt)
+library( ade4)
+library( mgcv)
+library( GGally)
+library( pheatmap)
+library( RColorBrewer)
+
+library( gage)
+library( clusterProfiler)
+
+library( knitr)
+library( kableExtra)
+library( DT)
+library( d3heatmap)
+library( htmltools)
+library( ggiraph)
+
+library( org.Mm.eg.db)
+library( reactome.db)
+library( GO.db)
+```
+
+```{r defineConstants, echo=FALSE, warning=FALSE, message=FALSE}
+
+dir.create( OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+
+BEST_NUMBER = 100
+BEST_NUMBER_HEATMAP = 30
+UNWANTED_REPLICATES = c( "FLP4.2")
+
+OBSERVED_GENES = c(  "Itgam", "Flt3", "S1pr1", "Siglecf", "Lta", "Il17a", "Il23R", "Il22", "Ets1",  "Rorc", "CD4", 
+                     "Id2", "Zbtb16", "Tnsfsf11", "Cxcr4", "Cxcr5", "Nfil3", "Tcf7", "Tox")
+```
+
+```{r definePlotConstants, echo=FALSE, warning=FALSE, message=FALSE}
+AXIS_TICK_SIZE = 12
+AXIS_TITLE_SIZE = 14
+LEGEND_TEXT_SIZE = 14
+VOLCANO_PLOT_GENE_TEXT_SIZE = 4
+POPULATION_NAME_MAPPING = c( EP1 = "eCLP", EP2 = "eLTiP", EP3 = "eLTi0", EP4 = "eLTi4",
+                                FLP1 = "fCLP", FLP2 = "fLTiP", FLP3 = "fLTi0", FLP4 = "fLTi4")
+REPLICATE_NAME_MAPPING = c( EP1.1 = "eCLP.1", EP1.2 = "eCLP.2", EP1.3 = "eCLP.3", EP1.4 = "eCLP.4",
+                               EP2.1 = "eLTiP.1", EP2.2 = "eLTiP.2", EP2.3 = "eLTiP.3", EP2.4 = "eLTiP.4",
+                               EP3.1 = "eLTi0.1", EP3.2 = "eLTi0.2", EP3.3 = "eLTi0.3", EP3.4 = "eLTi0.4",
+                               EP4.1 = "eLTi4.1", EP4.2 = "eLTi4.2", EP4.3 = "eLTi4.3", EP4.4 = "eLTi4.4",
+                               FLP1.1 = "fCLP.1", FLP1.2 = "fCLP.2", FLP1.3 = "fCLP.3", 
+                               FLP2.1 = "fLTiP.1", FLP2.2 = "fLTiP.2", FLP2.3 = "fLTiP.3",  
+                               FLP3.1 = "fLTi0.1", FLP3.2 = "fLTi0.2", FLP3.3 = "fLTi0.3", 
+                               FLP4.1 = "fLTi4.1", FLP421 = "fLTi4.2", FLP4.3 = "fLTi4.3")
+REPLICATE_POPULATION_MAPPING = c( EP1.1 = "eCLP", EP1.2 = "eCLP", EP1.3 = "eCLP", EP1.4 = "eCLP",
+                               EP2.1 = "eLTiP", EP2.2 = "eLTiP", EP2.3 = "eLTiP", EP2.4 = "eLTiP",
+                               EP3.1 = "eLTi0", EP3.2 = "eLTi0", EP3.3 = "eLTi0", EP3.4 = "eLTi0",
+                               EP4.1 = "eLTi4", EP4.2 = "eLTi4", EP4.3 = "eLTi4", EP4.4 = "eLTi4",
+                               FLP1.1 = "fCLP", FLP1.2 = "fCLP", FLP1.3 = "fCLP", 
+                               FLP2.1 = "fLTiP", FLP2.2 = "fLTiP", FLP2.3 = "fLTiP",  
+                               FLP3.1 = "fLTi0", FLP3.2 = "fLTi0", FLP3.3 = "fLTi0", 
+                               FLP4.1 = "fLTi4", FLP421 = "fLTi4", FLP4.3 = "fLTi4")
+
+POPULATION_COLOR_MAPPING = c( eCLP = "#009933", eLTiP = "#33CC66", eLTi0 = "#0066CC", eLTi4 = "#3399FF",
+                              fCLP = "#990033", fLTiP = "#CC3366", fLTi0 = "#FF9900", fLTi4 = "#FF6633")
+
+```
+
+[//]: # "Load the various chunks in the various files"
+```{r readChunks, echo=FALSE, warning=FALSE, message=FALSE}
+read_chunk( path=file.path( SCRIPT_DIR, "common_functions.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "prepare_data_read.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "prepare_data_normalization.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_qc_on_replicates.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_pairwise_DEseq.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_Phase2-Phase3_DEseq.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_gsea_from_deseq2_result.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_pathway_enrichment.R"))
+```
+
+## Read and normalize the data
+[//]: # "Read the data"
+```{r readData, echo=FALSE, message=FALSE, results = "asis"}
+<<load_common_functions>>
+<<read_data>>
+```  
+
+[//]: # "Normalize the data"
+```{r normalizeData, echo=FALSE, message=FALSE, results = "asis"}
+<<normalize_data>>
+```  
+
+## Quality Control analysis on replicates
+
+Here, we analyze the correlation between replicates of the same population type. 
+A pairmap for each population type show the scratterplot of gene expression (lower part), 
+the gene expression density plot (diagonal) and the pearson correlation value (top part). 
+Here gene expression is log2(1+normalized counts).
+
+```{r qcOnReplicatesPairs, echo=FALSE, results = "asis"}
+<<qc_on_replicates_pairs>>
+```
+
+## Comparison of population between EP and between FLP
+
+Here we analyze the similarities and variabilities between the populations of EP and then between population of FLP using a PCA. 
+We report for each 2 first components of the PCA the 30 genes with the strongest loadings 
+(i.e. the genes that explain the best the variability on the PCA component).
+A heatmap shown the expression of those genes between the samples. The heatmap is 
+clustered in both dimension using a hierarchical clustering (euclidean distance with average method). 
+Expression are reported in log2(1+normalized counts).
+
+```{r qcOnReplicatesSubpop, echo=FALSE, warning=FALSE, results = "asis"}
+<<qc_on_replicates_heterogeneity_subpop>>
+```  
+
+## Comparison of all populations
+
+Here, we make a similar study as previous one using all populations. 
+In the heatmap the WT samples are shown for information.
+
+```{r qcOnReplicatesAll, echo=FALSE, warning=FALSE, results = "asis"}
+<<qc_on_replicates_heterogeneity_all>>
+```  
+
+## Analysis of Differential Expression of Genes among pairs of populations
+
+In this section we execute an analysis of the differentially expressed genes between pairs of
+populations. For each pairs, we use a volcano plot displaying in x-axis the difference of
+the expression mean between the two populations and in y-axis the significance of the
+difference of expression (higher is more significant).
+The name of the top genes are shown in the volcano plot and in a table displaying the expression values for all populations.
+
+```{r pairwiseDEseq, echo=FALSE, warning=FALSE, results = "asis"}
+<<pairwise_deseq>>
+```  
+
+## Analysis of Differential Expression of Genes among phase 2 and phase 3
+
+In this section we execute an analysis of the differentially expressed genes between phase 2 and 3 of evolution
+i;e. EP2 vs EP3 and FLP2 vs FLP3. For each pairs we provide a volcanot plot of DEG, a table of DEG and
+compare the list of such genes between compared pairs.
+
+```{r phase2_3DEseq, echo=FALSE, warning=FALSE, results = "asis"}
+<<phase2_3_deseq>>
+```  
+
+## Analysis of pathways enrichment among phase2 and phase3
+
+### REACTOME Pathway analysis for EP3 versus EP2
+
+```{r phaseEP2_EP3_GSEA_REACTOME, echo=FALSE, warning=FALSE, results = "asis"}
+control_experiment_names = "EP2"
+treatment_experiment_names = "EP3"
+DESEQ_RESULT = dsHTSeq_result_list[[ paste0( control_experiment_names,"-",treatment_experiment_names)]]
+USED_DATABASE = "REACTOME"
+<<gsea_analysis_with_deseq2>>
+```  
+
+### REACTOME Pathway analysis for FLP3 versus FLP2
+```{r phaseFLP2_FLP3_GSEA_REACTOME, echo=FALSE, warning=FALSE, results = "asis"}
+control_experiment_names = "FLP2"
+treatment_experiment_names = "FLP3"
+DESEQ_RESULT = dsHTSeq_result_list[[ paste0( control_experiment_names,"-",treatment_experiment_names)]]
+USED_DATABASE = "REACTOME"
+<<gsea_analysis_with_deseq2>>
+```  
+
+### GO Biological Processes Pathway analysis for EP3 versus EP2
+
+```{r phaseEP2_EP3_GSEA_GOBP, echo=FALSE, warning=FALSE, results = "asis"}
+control_experiment_names = "EP2"
+treatment_experiment_names = "EP3"
+DESEQ_RESULT = dsHTSeq_result_list[[ paste0( control_experiment_names,"-",treatment_experiment_names)]]
+USED_DATABASE = "GO-BP"
+<<gsea_analysis_with_deseq2>>
+```  
+
+### GO Biological Processes analysis for FLP3 versus FLP2
+```{r phaseFLP2_FLP3_GSEA_GOBP, echo=FALSE, warning=FALSE, results = "asis"}
+control_experiment_names = "FLP2"
+treatment_experiment_names = "FLP3"
+DESEQ_RESULT = dsHTSeq_result_list[[ paste0( control_experiment_names,"-",treatment_experiment_names)]]
+USED_DATABASE = "GO-BP"
+<<gsea_analysis_with_deseq2>>
+```  
+
+## KEGG pathway analysis between pairs of conditions
+
+In this section we try to map the gene identified differentially expressed in the previous analysis to
+KEGG pathways and we compute a statistics to evaluate the enrichment of the pathways is the identified genes.
+Some specific pathways, identified to be potentially associated with the study, are specifically printed with their associted enrichment statistics.
+
+```{r pathwayEnrichmentExec, echo=FALSE, warning=FALSE, results = "asis"}
+<<pathway_enrichment>>
+```  

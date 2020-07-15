@@ -1,0 +1,127 @@
+---
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+
+
+
+
+```{r setKnitrOptions, include=FALSE}
+knitr::opts_chunk$set( results='asis', echo = FALSE, error = TRUE, cache = FALSE, cache.comments = TRUE, fig.dim = c(7,7), autodep = TRUE)
+```
+
+
+
+
+```{r loadParamsAndDependencies, warning=FALSE, message=FALSE}
+
+### Load general Deps
+cat("<BR>WORKING_DIR=", WORKING_DIR)
+source( file.path( WORKING_DIR, "00_generalDeps.R"));
+
+# Import chunks from source files
+read_chunk( path=file.path( WORKING_DIR, "01_prepareData.R"))
+read_chunk( path=file.path( WORKING_DIR, "02_velocityAnalysis.R"))
+```
+
+---
+title: `r paste( GLOBAL_DESCRIPTION, ANALYSIS_STEP_NAME, sep ="<BR>")`
+---
+
+
+```{r initFunctions}
+
+### Create output directory
+dir.create( PATH_ANALYSIS_OUTPUT, showWarnings = FALSE);
+
+
+### Record starting time (for report and file names)
+startTime = Sys.time();
+startTimeReport   = format( startTime, "%Y %m %d %H:%M:%S")
+startTimeFileName = format( startTime, "%Y_%m_%d_%H_%M_%S")
+
+
+### Initialize utils
+
+# Create a hash for all parameters
+paramsHash = digest( paramsEnv, algo="murmur32");
+
+# Create a 'safe' unique prefix for output files
+# outputFilesPrefix = paste0( SCIENTIFIC_PROJECT_NAME, "_",     
+#                             EXPERIMENT_PROJECT_NAME, "_"
+#                             #startTimeFileName, "_",
+#                             #paramsHash, "_"
+#                             )
+
+# Set seed for pseudo random number generator
+set.seed(42);
+
+# Create a hidden empty heatmap to prevent heatmapr interference with plotly functions (bug ?)
+cat('<div style="display: none">');
+main_heatmap(matrix(0));
+cat('</div>');
+```
+
+
+
+
+## Heterogeneity analysis on all samples
+
+
+### Run informations {.tabset .tabset-fade}
+
+#### Run
+<center>
+```{r runInfo_run}
+pander( c( 'Date'     = startTimeReport,
+           'Sample'   = SAMPLE_NAME,
+           'Hash'     = paramsHash));
+```
+</center>
+
+#### Parameters
+```{r runInfo_params}
+#showSimpleDT( paramsEnv); # Does not handle lists or nested lists easily
+listParams = as.list( paramsEnv);
+pander(listParams[order(names(listParams))]); # Show params in alphabetical order
+```
+
+#### System
+<center>
+```{r runInfo_sysInfo}
+showSimpleDT( Sys.info())
+```
+</center>
+
+#### R
+```{r runInfo_r}
+pander( sessionInfo());
+```
+
+<!-- Ending the tabset section -->
+### {.toc-ignore} 
+<br /><br />
+
+
+# Single-cell Analysis with Velocyto
+
+## Raw Analysis
+
+### Loading and building data
+In this section, we load the data, filter the cells using the previous analysis (QC and contamiantion) and load the various embedding (t-SNE, UMAP) and the cluster computation from
+the previous analysis
+```{r loadingData, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<load_data>>
+<<filter_data>>
+```  
+
+### Velocity estimation
+In this section, we look for the velocity of cells mapped on embeddings (t-SNE, UMAP) using or not the grid smoothing
+
+```{r estimateVelocity, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<estimate_velocity>>
+```  

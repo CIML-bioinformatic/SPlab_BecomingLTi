@@ -1,0 +1,293 @@
+FROM ubuntu:16.04
+
+MAINTAINER Spinelli Lionel (lionel.spinelli@univ-amu.fr)
+
+# ##################################
+# INSTALLING R FROM SOURCES
+# ##################################
+
+ARG R_VERSION
+ARG BUILD_DATE
+ENV BUILD_DATE ${BUILD_DATE:-}
+ENV R_VERSION ${R_VERSION:-3.4.1}
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV TERM xterm
+
+## dependencies
+RUN apt-get update \ 
+  && apt-get -y install python2.7-dev python-pip build-essential pkg-config libffi-dev libmagickwand-dev python-cffi
+
+RUN apt-get update \ 
+  && apt-get install -y --no-install-recommends \
+    bash-completion \
+    ca-certificates \
+    file \
+    fonts-texgyre \
+    g++ \
+    gfortran \
+    gsfonts \
+    libbz2-1.0 \
+    libcurl3 \
+    libicu55 \
+    libturbojpeg \
+    libopenblas-dev \
+    libpangocairo-1.0-0 \ 
+    libpcre3 \
+    libpng12-0 \
+    libtiff5 \ 
+    liblzma5 \
+    locales \
+    make \
+    unzip \
+    zip \
+    zlib1g \
+  && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
+  && locale-gen en_US.utf8 \
+  && /usr/sbin/update-locale LANG=en_US.UTF-8 \
+  && BUILDDEPS="curl \
+    default-jdk \
+    libbz2-dev \
+    libcairo2-dev \ 
+    libcurl4-openssl-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libicu-dev \
+    libpcre3-dev \
+    libpng-dev \
+    libreadline-dev \
+    libtiff5-dev \
+    liblzma-dev \ 
+    libx11-dev \
+    libxt-dev \
+    perl \
+    texinfo \
+    texlive-extra-utils \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-latex-recommended \
+    x11proto-core-dev \
+    xauth \
+    xfonts-base \
+    xvfb \
+    zlib1g-dev" \
+  && apt-get install -y --no-install-recommends $BUILDDEPS \ 
+  && cd tmp/ \
+## Download source code 
+  && curl -O https://cran.r-project.org/src/base/R-3/R-${R_VERSION}.tar.gz \
+## Extract source code
+  && tar -xf R-${R_VERSION}.tar.gz \
+  && cd R-${R_VERSION} \
+## Set compiler flags
+  && R_PAPERSIZE=letter \
+    R_BATCHSAVE="--no-save --no-restore" \
+    R_BROWSER=xdg-open \
+    PAGER=/usr/bin/pager \
+    PERL=/usr/bin/perl \
+    R_UNZIPCMD=/usr/bin/unzip \
+    R_ZIPCMD=/usr/bin/zip \
+    R_PRINTCMD=/usr/bin/lpr \
+    LIBnn=lib \
+    AWK=/usr/bin/awk \
+    CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g" \
+    CXXFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -Wdate-time -D_FORTIFY_SOURCE=2 -g" \
+## Configure options
+  ./configure --enable-R-shlib \
+               --enable-memory-profiling \
+               --with-readline \
+               --with-blas="-lopenblas" \
+               --disable-nls \
+               --without-recommended-packages \
+## Build and install
+  && make \
+  && make install \
+## Add a default CRAN mirror
+  && echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+## Add a library directory (for user-installed packages)
+  && mkdir -p /usr/local/lib/R/site-library \
+  && chown root:staff /usr/local/lib/R/site-library \
+  && chmod g+wx /usr/local/lib/R/site-library \
+## Fix library path
+  && echo "R_LIBS_USER='/usr/local/lib/R/site-library'" >> /usr/local/lib/R/etc/Renviron \
+  && echo "R_LIBS=\${R_LIBS-'/usr/local/lib/R/site-library:/usr/local/lib/R/library:/usr/lib/R/library'}" >> /usr/local/lib/R/etc/Renviron \
+## install packages from date-locked MRAN snapshot of CRAN
+  && [ -z "$BUILD_DATE" ] && BUILD_DATE=$(date -I --date='TZ="America/Los_Angeles"') || true \
+  && MRAN=https://mran.microsoft.com/snapshot/${BUILD_DATE} \
+  && echo MRAN=$MRAN >> /etc/environment \
+  && export MRAN=$MRAN \
+  && echo "options(repos = c(CRAN='$MRAN'), download.file.method = 'libcurl')" >> /usr/local/lib/R/etc/Rprofile.site \
+## Use littler installation scripts
+  && Rscript -e "install.packages(c('littler', 'docopt'), repo = '$MRAN')" \
+  && ln -s /usr/local/lib/R/site-library/littler/examples/install2.r /usr/local/bin/install2.r \
+  && ln -s /usr/local/lib/R/site-library/littler/examples/installGithub.r /usr/local/bin/installGithub.r \
+  && ln -s /usr/local/lib/R/site-library/littler/bin/r /usr/local/bin/r \
+## Clean up from R source install
+  && cd / \
+  && rm -rf /tmp/* \
+  && apt-get remove --purge -y $BUILDDEPS \
+  && apt-get autoremove -y \
+  && apt-get autoclean -y \
+  && rm -rf /var/lib/apt/lists/*
+
+# ########################################
+# INSTALLING Latex for sweave compilation
+# ########################################
+
+RUN apt-get update \ 
+  && apt-get -y install texlive-full
+
+# ##################################
+# INSTALLING RSTUDIO SERVER
+# ##################################
+
+ARG RSTUDIO_VERSION
+ARG PANDOC_TEMPLATES_VERSION 
+ENV PANDOC_TEMPLATES_VERSION ${PANDOC_TEMPLATES_VERSION:-2.6}
+
+## Add RStudio binaries to PATH
+ENV PATH /usr/lib/rstudio-server/bin:$PATH
+
+## Download and install RStudio server & dependencies
+## Attempts to get detect latest version, otherwise falls back to version given in $VER
+## Symlink pandoc, pandoc-citeproc so they are available system-wide
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    file \
+    git \
+    libapparmor1 \
+    libcurl4-openssl-dev \
+    libedit2 \
+    libssl-dev \
+    lsb-release \
+    psmisc \
+    python-setuptools \
+    sudo \
+    wget \ 
+  && RSTUDIO_LATEST=$(wget --no-check-certificate -qO- https://s3.amazonaws.com/rstudio-server/current.ver) \
+  && [ -z "$RSTUDIO_VERSION" ] && RSTUDIO_VERSION=$RSTUDIO_LATEST || true \
+  && wget -q http://download2.rstudio.org/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+  && dpkg -i rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+  && rm rstudio-server-*-amd64.deb \
+  ## Symlink pandoc & standard pandoc templates for use system-wide
+  && ln -s /usr/lib/rstudio-server/bin/pandoc/pandoc /usr/local/bin \
+  && ln -s /usr/lib/rstudio-server/bin/pandoc/pandoc-citeproc /usr/local/bin \
+  && wget https://github.com/jgm/pandoc/releases/download/${PANDOC_TEMPLATES_VERSION}/pandoc-${PANDOC_TEMPLATES_VERSION}-1-amd64.deb \
+  && dpkg -i pandoc-${PANDOC_TEMPLATES_VERSION}-1-amd64.deb \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/ \
+  ## RStudio wants an /etc/R, will populate from $R_HOME/etc
+  && mkdir -p /etc/R \
+  ## Write config files in $R_HOME/etc
+  && echo '\n\
+    \n# Configure httr to perform out-of-band authentication if HTTR_LOCALHOST \
+    \n# is not set since a redirect to localhost may not work depending upon \
+    \n# where this Docker container is running. \
+    \nif(is.na(Sys.getenv("HTTR_LOCALHOST", unset=NA))) { \
+    \n  options(httr_oob_default = TRUE) \
+    \n}' >> /usr/local/lib/R/etc/Rprofile.site \
+  && echo "PATH=\"${PATH}\"" >> /usr/local/lib/R/etc/Renviron \
+  ## Need to configure non-root user for RStudio
+  && useradd rstudio \
+  && echo "rstudio:rstudio" | chpasswd \
+	&& mkdir /home/rstudio \
+	&& chown rstudio:rstudio /home/rstudio \
+	&& addgroup rstudio staff \
+  ## configure git not to request password each time 
+  && git config --system credential.helper 'cache --timeout=3600' \
+  && git config --system push.default simple \
+  ## Set up S6 init system
+  && wget -P /tmp/ https://github.com/just-containers/s6-overlay/releases/download/v1.11.0.1/s6-overlay-amd64.tar.gz \
+  && tar xzf /tmp/s6-overlay-amd64.tar.gz -C / \
+  && mkdir -p /etc/services.d/rstudio \
+  && echo '#!/bin/bash \
+           \n exec /usr/lib/rstudio-server/bin/rserver --server-daemonize 0' \
+           > /etc/services.d/rstudio/run \
+   && echo '#!/bin/bash \
+           \n rstudio-server stop' \
+           > /etc/services.d/rstudio/finish
+
+COPY userconf.sh /etc/cont-init.d/conf
+EXPOSE 8787
+
+
+# ####################################
+# INSTALLING PDF VIEWER
+# ####################################
+
+RUN apt-get update \ 
+  && apt-get -y install evince
+
+
+# ####################################
+# INSTALLING R PACKAGES FOR PROJECT
+# ####################################
+
+RUN apt-get update && apt-get install -y libxml2-dev
+
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite()'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "annotate")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "genefilter")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "geneplotter")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "DESeq2")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "biomaRt")'
+
+RUN R -e 'install.packages( "ggplot2")'
+RUN R -e 'install.packages( "ggrepel")'
+RUN R -e 'install.packages( "stringr")'
+RUN R -e 'install.packages( "ade4")'
+RUN R -e 'install.packages( "mgcv")'
+RUN R -e 'install.packages( "GGally")'
+RUN R -e 'install.packages( "pheatmap")'
+RUN R -e 'install.packages( "RColorBrewer")'
+
+# -- Install gage for pathway analysis
+RUN apt-get update && apt-get install libpng-dev
+RUN R -e 'install.packages( "png")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "gage")'
+
+# -- Install packages for knitr and markdown
+RUN R -e 'install.packages( "knitr")'
+RUN R -e 'install.packages( "kableExtra")'
+RUN R -e 'install.packages( "formatR")'
+RUN R -e 'install.packages( "xtable")'
+
+# -- Install extra packages for data plotting
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite( "scater")'
+
+# -- Install Datatable package to have widget tables for reporting
+RUN R -e 'install.packages( "devtools")'
+RUN R -e 'devtools::install_github( "ramnathv/htmlwidgets")'
+RUN R -e 'devtools::install_github( "rstudio/DT")'
+RUN R -e 'install.packages( "htmltools")'
+RUN R -e 'install.packages("d3heatmap")'
+
+RUN apt-get update && apt-get install -y libcairo2-dev
+RUN R -e 'install.packages("gdtools")'
+RUN R -e 'install.packages("rvg")'
+RUN R -e 'devtools::install_github("davidgohel/ggiraph")'
+
+# -- Install ClusterProfiler for KEGG and GO enrichment analysis
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite("clusterProfiler")'
+
+# -- Install mouse annotation db
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite("org.Mm.eg.db")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite("reactome.db")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite("GO.db")'
+RUN R -e 'source("https://bioconductor.org/biocLite.R");biocLite("KEGG.db")'
+
+
+# ####################################
+# CLEAN INSTALL
+# ####################################
+  
+RUN apt-get clean\
+  && apt-get remove --yes --purge build-essential
+
+RUN mkdir -p /mnt
+
+# ####################################
+# ADD AUTOMATIC RUN OF RSTUDIO
+# WHEN CONTAINER IS LAUNCHED
+# ####################################
+
+CMD ["/init"]

@@ -1,0 +1,410 @@
+---
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+
+
+
+
+```{r setKnitrOptions, include=FALSE}
+knitr::opts_chunk$set( results='asis', echo = FALSE, error = TRUE, cache = FALSE, cache.comments = TRUE, fig.dim = c(7,7), autodep = TRUE)
+```
+
+
+
+
+```{r loadParamsAndDependencies, warning=FALSE, message=FALSE}
+
+### Load general Deps
+cat("<BR>WORKING_DIR=", WORKING_DIR)
+source( file.path( WORKING_DIR, "00_generalDeps.R"));
+
+# Import chunks from source files
+read_chunk( path=file.path( WORKING_DIR, "01_prepareData.R"));
+read_chunk( path=file.path( WORKING_DIR, "02_variableGenes.R"));
+read_chunk( path=file.path( WORKING_DIR, "03_cellHeterogeneity.R"));
+```
+
+---
+title: `r paste( GLOBAL_DESCRIPTION, ANALYSIS_STEP_NAME, sep ="<BR>")`
+---
+
+
+```{r initFunctions}
+
+### Create output directory
+dir.create( PATH_ANALYSIS_OUTPUT, showWarnings = FALSE);
+
+
+### Record starting time (for report and file names)
+startTime = Sys.time();
+startTimeReport   = format( startTime, "%Y %m %d %H:%M:%S")
+startTimeFileName = format( startTime, "%Y_%m_%d_%H_%M_%S")
+
+
+### Initialize utils
+
+# Create a hash for all parameters
+paramsHash = digest( paramsEnv, algo="murmur32");
+
+# Create a 'safe' unique prefix for output files
+# outputFilesPrefix = paste0( SCIENTIFIC_PROJECT_NAME, "_",     
+#                             EXPERIMENT_PROJECT_NAME, "_"
+#                             #startTimeFileName, "_",
+#                             #paramsHash, "_"
+#                             )
+
+# Set seed for pseudo random number generator
+set.seed(42);
+
+# Create a hidden empty heatmap to prevent heatmapr interference with plotly functions (bug ?)
+cat('<div style="display: none">');
+main_heatmap(matrix(0));
+cat('</div>');
+```
+
+
+## Heterogeneity analysis on all samples
+
+
+### Run informations {.tabset .tabset-fade}
+
+#### Run
+<center>
+```{r runInfo_run}
+pander( c( 'Date'     = startTimeReport,
+           'Sample'   = SAMPLE_NAME,
+           'Hash'     = paramsHash));
+```
+</center>
+
+#### Parameters
+```{r runInfo_params}
+#showSimpleDT( paramsEnv); # Does not handle lists or nested lists easily
+listParams = as.list( paramsEnv);
+pander(listParams[order(names(listParams))]); # Show params in alphabetical order
+```
+
+#### System
+<center>
+```{r runInfo_sysInfo}
+showSimpleDT( Sys.info())
+```
+</center>
+
+#### R
+```{r runInfo_r}
+pander( sessionInfo());
+```
+
+<!-- Ending the tabset section -->
+### {.toc-ignore} 
+<br /><br />
+
+
+
+
+### Load data from QC analysis and remove contamination
+
+In this section, we load the data filtered after QC and we remove the cells identified as contamination.
+
+```{r dataLoad}
+<<loadData>>
+```
+<br /><br />
+
+### Variable genes
+```{r findVariableGenes}
+<<findVariableGenes_seuratMethod>>
+```
+
+Number of variable genes found: `r variablesGenesStats`
+
+```{r findVariableGenes_summaryPlot}
+<<findVariableGenes_summaryPlot>>
+```
+<br />
+
+Top `r VARIABLE_FEATURES_SHOWTOP` most variable annotations:
+
+```{r findVariableGenes_summaryTable}
+<<findVariableGenes_summaryTable>>
+```
+<br /><br />
+
+
+
+### Clusters identification
+
+#### Cells distribution
+```{r heterogeneity_identifyClusters}
+<<heterogeneity_identifyClusters>>
+```
+
+#### Statistics by cluster
+```{r heterogeneity_identifyClusters_splitStats}
+<<heterogeneity_identifyClusters_splitStats>>
+```
+<br /><br />
+
+
+### PCA results
+
+PCA projections for dimensions `r paste( 1:PCA_PLOTS_NBDIMS, collapse="/")`  
+```{r heterogeneity_pca, fig.dim = c(3.5,3.5), out.width='33%'}
+<<heterogeneity_pca>>
+```
+<br />
+
+UMIs counts on PCA dimensions `r paste( 1:PCA_PLOTS_NBDIMS, collapse="/")`  
+```{r heterogeneity_pca_umisCounts, fig.dim = c(3.5,3.5), out.width='33%'}
+<<heterogeneity_pca_umisCounts>>
+```
+<br />
+
+Genes counts on PCA dimensions `r paste( 1:PCA_PLOTS_NBDIMS, collapse="/")`  
+```{r heterogeneity_pca_genesCounts, fig.dim = c(3.5,3.5), out.width='33%'}
+<<heterogeneity_pca_genesCounts>>
+```
+<br />
+
+Correlation (Spearman) of PCA dimensions `r paste( 1:PCA_PLOTS_NBDIMS, collapse="/")` with UMIs and genes counts  
+```{r heterogeneity_pca_correlations, fig.dim = c(9,6)}
+<<heterogeneity_pca_correlations>>
+```
+<br />
+
+PCA loadings of top `r PCA_PLOTS_NBFEATURES` features for dimensions `r paste( 1:PCA_PLOTS_NBDIMS, collapse="/")`  
+```{r heterogeneity_pca_loadings, fig.dim = c(3.5,3.5), out.width='33%'}
+<<heterogeneity_pca_loadings>>
+```
+<br /><br />
+
+
+
+
+### Dimensionality reduction and clustering {.tabset .tabset-fade}
+```{r heterogeneity_dimReduc}
+<<heterogeneity_dimReduc>>
+```
+
+#### tSNE {.tabset .tabset-fade}
+```{r heterogeneity_dimReduc_plot_tSNE}
+useReduction='tsne';
+
+<<heterogeneity_dimReduc_interactivePlot_clusters>>
+#<<heterogeneity_dimReduc_interactivePlot_samples>>
+#<<heterogeneity_dimReduc_details_samples>>
+rm("useReduction");
+```
+
+#### UMAP {.tabset .tabset-fade}
+```{r heterogeneity_dimReduc_plot_UMAP}
+useReduction='umap'
+
+<<heterogeneity_dimReduc_interactivePlot_clusters>>
+#<<heterogeneity_dimReduc_interactivePlot_samples>>
+#<<heterogeneity_dimReduc_details_samples>>
+rm("useReduction");
+```
+
+
+<!-- Ending the tabset section -->
+#### {.toc-ignore}
+
+<!-- Ending the tabset section -->
+### {.toc-ignore}
+<br /><br />
+
+
+
+
+### Marker genes
+```{r heterogeneity_markerGenes}
+<<heterogeneity_markerGenes>>
+```
+
+#### Marker genes list
+```{r heterogeneity_markerGenes_table}
+<<heterogeneity_markerGenes_table>>
+```
+<br />
+
+#### Marker genes heatmap
+
+Expression heatmap of top marker genes sorted by Seurat clusters:
+
+```{r heterogeneity_markerGenes_heatmap}
+<<heterogeneity_markerGenes_heatmap>>
+```
+
+#### Marker genes expression on t-SNE/UMAP {.tabset .tabset-fade}
+
+##### tSNE {.tabset .tabset-fade}
+```{r heterogeneity_markerGenes_expression_tSNE, fig.dim = c(3,3), out.width='25%'}
+useReduction='tsne';
+
+cat("\n<a href='#dimensionality-reduction'>");
+<<heterogeneity_dimReduc_thumbnail>>
+cat("</a> \n \n");
+
+<<heterogeneity_markerGenes_expression>>
+
+rm("useReduction");
+```
+
+<!-- Ending the tabset section -->
+##### {.toc-ignore}
+
+##### UMAP {.tabset .tabset-fade}
+```{r heterogeneity_markerGenes_expression_UMAP, fig.dim = c(3,3), out.width='25%'}
+useReduction='umap';
+
+cat("\n<a href='#dimensionality-reduction'>");
+<<heterogeneity_dimReduc_thumbnail>>
+cat("</a> \n \n");
+
+<<heterogeneity_markerGenes_expression>>
+
+rm("useReduction");
+```
+
+<!-- Ending the tabset section -->
+##### {.toc-ignore}
+
+
+<!-- Ending the tabset section -->
+#### {.toc-ignore}
+<br /><br />
+
+
+#### Marker genes expression on violin plots
+
+Here we show the detail of expression of all genes identified as marker for at least one cluster
+as violin plot per cluster (with jitter point). Numbers above each violin plot is (i) top: the number
+of cells with a positive expression of the gene in the cluster (ii) bottom : the number of cells
+with a null expression of the gene in the cluster.
+
+```{r heterogeneity_markerGenes_expression_violin, fig.keep = "all", fig.dim = c(3,3), out.width='25%'}
+<<heterogeneity_markerGenes_expression_violinplot>>
+```
+
+
+### Monitored genes
+```{r heterogeneity_monitoredGenes}
+<<heterogeneity_monitoredGenes>>
+```
+
+#### Monitored genes heatmap
+
+Expression heatmap of monitored genes sorted by Seurat clusters:
+
+```{r heterogeneity_monitoredGenes_heatmap}
+<<heterogeneity_monitoredGenes_heatmap>>
+```
+
+#### Monitored genes expression {.tabset .tabset-fade}
+
+##### tSNE {.tabset .tabset-fade}
+```{r heterogeneity_monitoredGenes_expression_tSNE, fig.dim = c(3,3), out.width='25%'}
+useReduction='tsne'
+
+cat("\n<a href='#dimensionality-reduction'>");
+<<heterogeneity_dimReduc_thumbnail>>
+cat("</a> \n \n");
+
+<<heterogeneity_monitoredGenes_expression>>
+
+rm("useReduction");
+```
+
+<!-- Ending the tabset section -->
+##### {.toc-ignore}
+
+##### UMAP {.tabset .tabset-fade}
+```{r heterogeneity_monitoredGenes_expression_UMAP, fig.dim = c(3,3), out.width='25%'}
+useReduction='umap'
+
+cat("\n<a href='#dimensionality-reduction'>");
+<<heterogeneity_dimReduc_thumbnail>>
+cat("</a> \n \n");
+
+<<heterogeneity_monitoredGenes_expression>>
+
+rm("useReduction");
+```
+
+<!-- Ending the tabset section -->
+##### {.toc-ignore}
+
+<!-- Ending the tabset section -->
+#### {.toc-ignore}
+<br /><br />
+
+#### Monitored genes expression on violin plots
+
+Here we show the detail of expression of all monitored genes
+as violin plot per cluster (with jitter point). Numbers above each violin plot is (i) top: the number
+of cells with a positive expression of the gene in the cluster (ii) bottom : the number of cells
+with a null expression of the gene in the cluster.
+
+```{r heterogeneity_monitoredGenes_expression_violin, fig.keep = "all", fig.dim = c(3,3), out.width='25%'}
+<<heterogeneity_monitoredGenes_expression_violinplot>>
+```
+
+
+### Exporting results to file
+
+```{r exportResults, results='asis', echo=FALSE, warning=FALSE}
+
+cat("<BR>Exporting expression data to file:<BR>")
+
+# Exporting raw expression data (as produced by Cellranger)
+raw_expression_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Contaminationfiltered_raw_expression_matrix.csv"))
+cat("<BR>* Raw expression:<BR>", raw_expression_file_path)
+write.table( as.data.frame( GetAssayData(object = sc10x.rna.seurat, slot = "counts")), file = raw_expression_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+# Exporting normalized expression data
+normalized_expression_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Normalized_Contaminationfiltered_expression_matrix.csv"))
+cat("<BR>* Normalized expression:<BR>", normalized_expression_file_path)
+write.table( as.data.frame( GetAssayData(object = sc10x.rna.seurat, slot = "data")), file = normalized_expression_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+cat("<BR><BR>Exporting Rdata to files:<BR>")
+
+# Exporting Seurat object
+seurat_object_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Contaminationfiltered_sc10x.rna.seurat.RDS"))
+
+cat("<BR>* Seurat Object:<BR>", seurat_object_file_path)
+saveRDS( object = sc10x.rna.seurat, file = seurat_object_file_path)
+
+cat("<BR><BR>Exporting dimensionality reduction mapping to files:<BR>")
+
+# Exporting PCA map
+PCA_map_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Normalized_Contaminationfiltered_PCAcoord.tsv"))
+cat("<BR>* PCA map:<BR>", PCA_map_file_path)
+write.table( Embeddings( sc10x.rna.seurat, reduction = "pca"), file = PCA_map_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+# Exporting t-SNE map
+tsne_map_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Normalized_Contaminationfiltered_Tsnecoord.tsv"))
+cat("<BR>* t-SNE map:<BR>", tsne_map_file_path)
+write.table( Embeddings( sc10x.rna.seurat, reduction = "tsne"), file = tsne_map_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+# Exporting UMAP map
+umap_map_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Normalized_Contaminationfiltered_Umapcoord.tsv"))
+cat("<BR>* UMAP map:<BR>", umap_map_file_path)
+write.table( Embeddings( sc10x.rna.seurat, reduction = "umap"), file = umap_map_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+cat("<BR><BR>Exporting clustering to files:<BR>")
+seurat_clusters_file_path = file.path( PATH_ANALYSIS_OUTPUT, paste0( outputFilesPrefix, "QCfiltered_Normalized_Contaminationfiltered_Seurat_clusters.tsv"))
+cat("<BR>Seurat Clusters:<BR>", seurat_clusters_file_path)
+Idents( sc10x.rna.seurat) = "seurat_clusters"
+write.table( data.frame( Idents( sc10x.rna.seurat)), file = seurat_clusters_file_path, quote = FALSE, col.names = TRUE, row.names = TRUE, sep=",")
+
+
+```
+
+

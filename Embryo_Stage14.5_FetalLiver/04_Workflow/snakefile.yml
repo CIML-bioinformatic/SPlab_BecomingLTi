@@ -1,0 +1,149 @@
+
+# ----------------------------------------------
+# Define some contants relative to project
+# ----------------------------------------------
+PROJECT_NAME="BecomingLTi"
+EXPERIMENT_NAME="Embryo_Stage14.5_FetalLiver"
+SAMPLE_ID="11230812"
+
+
+# ----------------------------------------------
+# The default target rule
+# ----------------------------------------------
+rule all:
+  input:
+    final_report = expand( "05_Output/05_Dynamics_RNAVelocity/{project}_{experiment}_05_Dynamics_RNAVelocity.html", project = PROJECT_NAME, experiment = EXPERIMENT_NAME)
+    #final_report = expand( "05_Output/04_Dynamics_Monocle/{project}_{experiment}_04_Dynamics_Monocle.html", project = PROJECT_NAME, experiment = EXPERIMENT_NAME)
+
+
+# ----------------------------------------------
+# Execute QC analysis
+# ----------------------------------------------
+rule QC:
+  input:
+    barcodes = "00_RawData/CellRanger_Counts/outs/filtered_feature_bc_matrix/barcodes.tsv.gz",
+    genes = "00_RawData/CellRanger_Counts/outs/filtered_feature_bc_matrix/features.tsv.gz",
+    expression_matrix = "00_RawData/CellRanger_Counts/outs/filtered_feature_bc_matrix/matrix.mtx.gz"
+
+  output:
+    html_report = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_01_QC.html",
+    excluded_cells_nbgenes = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_excluded_cells_nbGene.txt",
+    excluded_cells_nbumi = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_excluded_cells_nbUMI.txt",
+    excluded_cells_pctmito = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_excluded_cells_pctMito.txt",
+    excluded_cells_pctribo = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_excluded_cells_pctRibo.txt",
+    seurat_robject = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_sc10x.rna.seurat.RDS"
+
+  singularity: 
+    "02_Container/splab_becominglti_seurat.img"
+
+  script:
+    "03_Script/01_QC/launch_reports_compilation.R"
+
+
+# ----------------------------------------------
+# Analyse heterogeneity and detect contamination
+# ----------------------------------------------
+rule GlobalHeterogeneity:
+  input:
+    html_report = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_01_QC.html",
+    seurat_robject_afterqc = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_sc10x.rna.seurat.RDS"
+
+  output:
+    html_report = "05_Output/02_GlobalHeterogeneity/{PROJECT_NAME}_{EXPERIMENT_NAME}_02_GlobalHeterogeneity.html",
+    contamination_cells = "05_Output/02_GlobalHeterogeneity/{PROJECT_NAME}_{EXPERIMENT_NAME}_contamination_excluded_all_cells.txt"
+
+  singularity: 
+    "02_Container/splab_becominglti_seurat.img"
+
+  script:
+    "03_Script/02_GlobalHeterogeneity/launch_reports_compilation.R"
+
+
+# ----------------------------------------------
+# Analyse heterogeneity without contamination
+# ----------------------------------------------
+rule GlobalHeterogeneity_NoContamination:
+  input:
+    html_report = "05_Output/02_GlobalHeterogeneity/{PROJECT_NAME}_{EXPERIMENT_NAME}_02_GlobalHeterogeneity.html",
+    seurat_robject_afterqc = "05_Output/01_QC/{PROJECT_NAME}_{EXPERIMENT_NAME}_sc10x.rna.seurat.RDS",
+    contamination_cells = "05_Output/02_GlobalHeterogeneity/{PROJECT_NAME}_{EXPERIMENT_NAME}_contamination_excluded_all_cells.txt"
+
+  output:
+    html_report = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_03_GlobalHeterogeneity_NoContamination.html",
+    raw_expression_matrix_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Contaminationfiltered_raw_expression_matrix.csv",
+    normalized_expression_matrix_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_expression_matrix.csv",
+    seurat_robject_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Contaminationfiltered_sc10x.rna.seurat.RDS",
+    seurat_pca_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_PCAcoord.tsv",
+    seurat_tsne_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Tsnecoord.tsv",
+    seurat_umap_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Umapcoord.tsv",
+    seurat_clusters_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Seurat_clusters.tsv"
+
+  singularity: 
+    "02_Container/splab_becominglti_seurat.img"
+
+  script:
+    "03_Script/03_GlobalHeterogeneity_NoContamination/launch_reports_compilation.R"
+
+
+# ----------------------------------------------
+# Analyse dynamics with Monocle
+# ----------------------------------------------
+rule Dynamics_Monocle:
+  input:
+    html_report = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_03_GlobalHeterogeneity_NoContamination.html",
+    raw_expression_matrix_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Contaminationfiltered_raw_expression_matrix.csv",
+    seurat_tsne_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Tsnecoord.tsv",
+    seurat_umap_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Umapcoord.tsv"
+
+  output:
+    html_report = "05_Output/04_Dynamics_Monocle/{PROJECT_NAME}_{EXPERIMENT_NAME}_04_Dynamics_Monocle.html",
+    seurat_tsne_embedding_nocontamination = "05_Output/04_Dynamics_Monocle/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Tsnecoord_WithCellType.tsv",
+    seurat_umap_embedding_nocontamination = "05_Output/04_Dynamics_Monocle/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Umapcoord_WithCellType.tsv"
+
+  singularity: 
+    "02_Container/splab_becominglti_monocle.img"
+
+  script:
+    "03_Script/04_Dynamics_Monocle/launch_reports_compilation.R"
+
+# ----------------------------------------------
+# Analyse dynamics with RNA Velocity
+# ----------------------------------------------
+rule Dynamics_RNAVelocity_build_loom:
+  params:
+    sample_id = SAMPLE_ID
+  input:
+    cell_ranger_bam_file = "00_RawData/CellRanger_Counts/outs/possorted_genome_bam.bam",
+    cell_ranger_bam_index_file = "00_RawData/CellRanger_Counts/outs/possorted_genome_bam.bam.bai",
+    reference_genome_annotation = "01_Reference/Genome/GRCm38/annotation/Mus_musculus.GRCm38.90.gtf"
+
+  output:
+    loom_file = "05_Output/05_Dynamics_RNAVelocity/11230812.loom"
+
+  singularity: 
+    "02_Container/rna_velocity.img"
+
+  shell:
+    "03_Script/05_Dynamics_RNAVelocity/execute_velocito.sh {input.cell_ranger_bam_file} {input.reference_genome_annotation} {output.loom_file}"
+
+
+rule Dynamics_RNAVelocity:
+  params:
+    sample_id = SAMPLE_ID
+  input:
+    loom_file = "05_Output/05_Dynamics_RNAVelocity/11230812.loom",
+    normalized_expression_matrix_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_expression_matrix.csv",
+    seurat_clusters_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Seurat_clusters.tsv",
+    seurat_pca_embedding_nocontamination = "05_Output/03_GlobalHeterogeneity_NoContamination/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_PCAcoord.tsv",
+    seurat_tsne_embedding_nocontamination_withcelltype = "05_Output/04_Dynamics_Monocle/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Tsnecoord_WithCellType.tsv",
+    seurat_umap_embedding_nocontamination_withcelltype = "05_Output/04_Dynamics_Monocle/{PROJECT_NAME}_{EXPERIMENT_NAME}_QCfiltered_Normalized_Contaminationfiltered_Umapcoord_WithCellType.tsv"
+
+  output:
+    html_report = "05_Output/05_Dynamics_RNAVelocity/{PROJECT_NAME}_{EXPERIMENT_NAME}_05_Dynamics_RNAVelocity.html",
+
+  singularity: 
+    "02_Container/splab_becominglti_rnavelocity.img"
+
+  script:
+    "03_Script/05_Dynamics_RNAVelocity/launch_reports_compilation.R"
+

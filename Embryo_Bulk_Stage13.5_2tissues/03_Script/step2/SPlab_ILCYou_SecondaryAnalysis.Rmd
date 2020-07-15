@@ -1,0 +1,99 @@
+---
+title: "SPlab - ILC you project Secondary Analysis"
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    # dev: "pdf"
+    # self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error=TRUE)
+```
+
+```{r loadLibraries, echo=FALSE, warning=FALSE, message=FALSE}
+library( DESeq2)
+library( ggplot2)
+library( ggrepel)
+library( xtable)
+library( stringr)
+library( biomaRt)
+library( ade4)
+library( mgcv)
+library( GGally)
+library( pheatmap)
+library( RColorBrewer)
+library( gage)
+library( org.Mm.eg.db)
+library( knitr)
+library( kableExtra)
+library( DT)
+library( d3heatmap)
+library( htmltools)
+library( ggiraph)
+library( reshape)
+```
+
+```{r definePathConstants, echo=FALSE, warning=FALSE, message=FALSE}
+
+
+dir.create( OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+```
+
+```{r defineAnalysisConstants, echo=FALSE, warning=FALSE, message=FALSE}
+POPULATION_TYPE = list( EP= c("EP1", "EP2", "EP3", "EP4"), FLP= c("FLP1", "FLP2", "FLP3", "FLP4"))
+UNWANTED_REPLICATES = c( "FLP4.2")
+
+MONITORED_GENES = c( "Flt3", "Ets1", "Lta", "CD4", "Rorc", "Il17a", "Il23r", "Il22", "Itgb5", "Zbtb16",
+                           "Itga4", "Itgb7", "Tnfsf11", "Tnfrsf11a", "Id2", "Cxcr4", "Cxcr5", "Nfil3", "Tcf7", "Tox")
+
+GENE_FUNCTIONAL_CATEGORIES = list(
+             Transcription_factors = c( "Rora", "Rorc", "Ahr", "Arnt2", "Gata3", "Icos", "Id1", "Id2", "Id3", 
+                                        "Nfil3", "Runx1", "Tcf7", "Tox", "Tox2", "Zbtb16"),
+             LTi_markers = c( "Itga4", "Itgb7", "Itgb5", "Cxcr6", "Ccr6",  "S1pr1", "Cd34", "Cd4", "Lta", "Ltb"),
+             Cytokines = c( "Il17a", "Il17f", "Il17ra", "Il17re", "Il22", "Il23r", "Il27ra", "Il2rb"),
+             Notch_signaling = c( "Dll1", "Hes1", "Batf3", "Cd160", "Cd27", "Ikzf3", "Arg1"),
+             TNF_related = c( "Tnfrsf13b", "Tnfrsf11a", "Tnfrsf25", "Tnfrsf9", "Tnfsf9"),
+             Retinoic_acid = c( "Fabp4", "Fabp7", "Rxrg", "Rbp4", "Stra6", "Rarb", "Rara", "Rarg", "Rxra", "Rxrb")
+)
+```
+
+```{r definePlotConstants, echo=FALSE, warning=FALSE, message=FALSE}
+AXIS_TICK_SIZE = 12
+AXIS_TITLE_SIZE = 14
+LEGEND_TEXT_SIZE = 14
+
+POPULATION_NAME_MAPPING = c( EP1 = "eCLP", EP2 = "eLTiP", EP3 = "eLTi0", EP4 = "eLTi4",
+                             FLP1 = "fCLP", FLP2 = "fLTiP", FLP3 = "fLTi0", FLP4 = "fLTi4")
+```
+
+
+[//]: # "Load the various chunks in the various files"
+```{r readChunks, echo=FALSE, warning=FALSE, message=FALSE}
+read_chunk( path=file.path( SCRIPT_DIR, "prepare_load_data.R"))
+read_chunk( path=file.path( SCRIPT_DIR, "analysis_expression_pattern.R"))
+```
+
+## Read the data
+
+```{r loadData, echo=FALSE, message=FALSE, results = "asis"}
+<<load_data>>
+```  
+
+## Evolution pattern along EP populations
+
+In this section, we determine the evolution pattern of each genes along the four EP populations. Evolution
+are encoded with 3 numbers for the variation between EP1-EP2, EP2-EP3 and EP3-EP4. a "1" indicates an increase of value, a "-1" a decrease and a "0" no variation.
+
+For instance:
+* "111" = increase between EP1 and EP2, between EP2 and EP3 and between EP3 and EP4
+* "1-11" = increase between EP1 and EP2, decrease between EP2 and EP3 and increase between EP3 and EP4
+
+Note : We show only the top 20 gene with the most important variations between populations.
+
+```{r expressionPattern, echo=FALSE, message=FALSE, results = "asis"}
+<<expression_pattern>>
+```  
+

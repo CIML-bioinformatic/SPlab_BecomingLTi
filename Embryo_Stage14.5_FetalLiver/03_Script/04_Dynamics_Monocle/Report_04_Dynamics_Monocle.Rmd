@@ -1,0 +1,176 @@
+---
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+
+
+
+
+```{r setKnitrOptions, include=FALSE}
+knitr::opts_chunk$set( results='asis', echo = FALSE, error = TRUE, cache = FALSE, cache.comments = TRUE, fig.dim = c(7,7), autodep = TRUE)
+```
+
+
+
+
+```{r loadParamsAndDependencies, warning=FALSE, message=FALSE}
+
+### Load general Deps
+cat("<BR>WORKING_DIR=", WORKING_DIR)
+source( file.path( WORKING_DIR, "00_generalDeps.R"));
+
+# Import chunks from source files
+read_chunk( path=file.path( WORKING_DIR, "01_prepare_data.R"));
+read_chunk( path=file.path( WORKING_DIR, "02_prepare_define_cell_type_hierarchy.R"));
+read_chunk( path=file.path( WORKING_DIR, "03_analysis_classify_cells.R"));
+read_chunk( path=file.path( WORKING_DIR, "04_analysis_pseudotime.R"));
+read_chunk( path=file.path( WORKING_DIR, "05_analysis_pseudotime_tree.R"));
+```
+
+---
+title: `r paste( GLOBAL_DESCRIPTION, ANALYSIS_STEP_NAME, sep ="<BR>")`
+---
+
+
+```{r initFunctions}
+
+### Create output directory
+dir.create( PATH_ANALYSIS_OUTPUT, showWarnings = FALSE);
+
+
+### Record starting time (for report and file names)
+startTime = Sys.time();
+startTimeReport   = format( startTime, "%Y %m %d %H:%M:%S")
+startTimeFileName = format( startTime, "%Y_%m_%d_%H_%M_%S")
+
+
+### Initialize utils
+
+# Create a hash for all parameters
+paramsHash = digest( paramsEnv, algo="murmur32");
+
+# Create a 'safe' unique prefix for output files
+# outputFilesPrefix = paste0( SCIENTIFIC_PROJECT_NAME, "_",     
+#                             EXPERIMENT_PROJECT_NAME, "_"
+#                             #startTimeFileName, "_",
+#                             #paramsHash, "_"
+#                             )
+
+# Set seed for pseudo random number generator
+set.seed(42);
+
+# Create a hidden empty heatmap to prevent heatmapr interference with plotly functions (bug ?)
+cat('<div style="display: none">');
+main_heatmap(matrix(0));
+cat('</div>');
+```
+
+
+## Heterogeneity analysis on all samples
+
+
+### Run informations {.tabset .tabset-fade}
+
+#### Run
+<center>
+```{r runInfo_run}
+pander( c( 'Date'     = startTimeReport,
+           'Sample'   = SAMPLE_NAME,
+           'Hash'     = paramsHash));
+```
+</center>
+
+#### Parameters
+```{r runInfo_params}
+#showSimpleDT( paramsEnv); # Does not handle lists or nested lists easily
+listParams = as.list( paramsEnv);
+pander(listParams[order(names(listParams))]); # Show params in alphabetical order
+```
+
+#### System
+<center>
+```{r runInfo_sysInfo}
+showSimpleDT( Sys.info())
+```
+</center>
+
+#### R
+```{r runInfo_r}
+pander( sessionInfo());
+```
+
+<!-- Ending the tabset section -->
+### {.toc-ignore} 
+<br /><br />
+
+[//]: # "Main title with sampleID" 
+```{r mainTitle, echo=FALSE, results='asis', message=FALSE}
+cat("<H1>Secondary analysis on", SAMPLE_ID, "data - Analysis with monocle</H1>")
+```  
+
+## Loading and building data
+In this section, we load the data, normalize them using the Monocle size factor method, identify genes expressed by a minimum of cells and look at the expression of those genes. 
+```{r loadingData, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<load_data>>
+<<build_data>>
+<<filter_data>>
+```  
+
+## Classifying cells {.tabset}
+
+Monocle provides an algorithm you can use to impute the types of the "Unknown" cells. This algorithm, implemented in the function clusterCells, groups cells together according to global expression profile. clusterCells can be used in an unsupervised manner, as well as in a semi-supervised'' mode, which allows to assist the algorithm with some expert knowledge. We will look at the results for both unsupervised and semi-supervised method.
+
+### Classifying cells with markers (semi-supervised method)
+
+#### Clustering cells with cell hierarchy
+
+Monocle provides a simple system for tagging cells based on the expression of marker genes of your choosing. You simply provide a set of functions that Monocle can use to annotate each cell. For example, you could provide a function for each of several cell types. These functions accept as input the expression data for each cell, and return TRUE to tell Monocle that a cell meets the criteria defined by the function. So you could have one function that returns TRUE for cells that express myoblast-specific genes, another function for fibroblast-specific genes, etc. 
+
+```{r classifyCellsByType, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<define_cell_type_hierarchy>>
+<<classify_cells_by_type>>
+```  
+
+#### Identify marker genes from identified cell types
+
+First, we'll select a different set of genes to use for clustering the cells. Before we just picked genes that were highly expressed and highly variable. Now, we'll pick genes that co-vary with our markers. In a sense, we'll be building a large list of genes to use as markers.
+
+```{r classifyCellsWithMarkers, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<identify_markers_from_celltype>>
+```  
+
+#### Pseudo time analysis
+
+Here we will apply the pseudo-time analysis from Monocle using the data from the "with markers" analysis and the 100 best markers.
+
+```{r choosePseudotimeContext, echo=TRUE, warning=FALSE, message=FALSE}
+filtered_cds_for_pseudotime = filtered_cds_cell_type
+signature_genes_for_pseudotime =  unique( selectTopMarkers( marker_spec, 100)$gene_id)
+```  
+
+```{r pseudotimeAnalysis, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<pseudotime_analysis>>
+```  
+
+
+
+### Classifying cells without markers (unsupervised method)
+
+The first step is to decide which genes to use in clustering the cells. We could use all genes, but we'd be including a lot of genes that are not expressed at a high enough level to provide a meaningful signal. Including them would just add noise to the system. We can filter genes based on average expression level, and we can additionally select genes that are unusually variable across cells. These genes tend to be highly informative about cell state.
+
+#### Clustering cells without prior markers
+
+```{r classifyCellsWihtoutMarker, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<classify_cells_without_marker>>
+```  
+
+#### Build pseudo-time tree without marker
+
+```{r buildPseudotimeTreeWithoutMarker, fig.keep="all", results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+<<build_peudotime_tree_without_marker>>
+```  
+

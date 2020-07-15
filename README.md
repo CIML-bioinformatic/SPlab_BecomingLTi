@@ -1,4 +1,23 @@
-# WORK IN PROGRESS
+# Distinct waves from the hemogenic endothelium give rise to layered Lymphoid Tissue Inducer cell ontogeny
+
+## Article information
+
+**Title:** Distinct waves from the hemogenic endothelium give rise to layered Lymphoid Tissue Inducer cell ontogeny.
+
+**Authors:** Milesa Simic 1, Iris Manosalva 1, Lionel Spinelli 1 , Rebecca Gentek 1&, Raheleh R. Shayan 1, Carole Siret 1, Mathilde Girard-Madoux 1, Shuaiwei Wang 1, Lauriane de Fabritus 1, Janneke Verschoor 1, Yann M. Kerdiles 1, Marc Bajenoff 1, Ralf Stumm 2, Rachel Golub 3, Serge A. van de Pavert 1%
+
+1 Aix-Marseille Univ, Centre National de la Recherche Scientifique (CNRS), Institut National de la Santé et de la Recherche Médicale (INSERM), Centre d'Immunologie de Marseille-Luminy (CIML), Marseille, France.
+
+2 Institute of Pharmacology and Toxicology, Jena University Hospital, Friedrich Schiller University Jena, 07747 Jena, Germany. 
+3 Institut Pasteur, Immunology Department, Lymphopoiesis Unit, Inserm U668, University Paris Diderot, Paris, France.
+
+& Currently at at Centre for Inflammation Research (CIR), Institute of Regeneration and Repair, University of Edinburgh, Edinburgh, United Kingdom
+
+% Corresponding author: E-mail: vandepavert@ciml.univ-mrs.fr
+
+**Summary:**
+During embryogenesis Lymphoid Tissue Inducer (LTi) cells are essential for lymph node organogenesis. These cells are part of the Innate Lymphoid Cell (ILC) family. Although their earliest embryonic hematopoietic origin is unclear, other innate immune cells were shown to be derived from both early hemogenic endothelium in the yolk-sac as well as the aorta-gonad-mesonephros. A proper model to discriminate between these locations was unavailable. In this study, using a new Cxcr4-CreERT2 lineage tracing model, we identify a major contribution from embryonic hemogenic endothelium, but not yolk-sac, towards the LTi progenitors. Conversely, embryonic LTi cells are replaced by hematopoietic stem cell derived cells in adult. We further show that within the fetal liver common lymphoid progenitors differentiate into highly dynamic alpha-lymphoid precursor cells, which at this embryonic stage preferentially mature into LTi precursors and establish their functional LTi cell identity only after reaching the periphery.
+
 
 ---
 ---

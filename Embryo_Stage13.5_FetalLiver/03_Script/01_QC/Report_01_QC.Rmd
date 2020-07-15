@@ -1,0 +1,149 @@
+---
+output:
+  html_document: 
+    theme: cerulean
+    toc: true
+    toc_float: true
+    toc_depth: 4
+---
+
+```{r setKnitrOptions, include=FALSE}
+knitr::opts_chunk$set(results='asis', echo = FALSE, error = TRUE, cache = FALSE, cache.comments = TRUE, fig.dim = c(7,7), autodep = TRUE)
+```
+
+
+
+
+```{r loadParamsAndDependencies, warning=FALSE, message=FALSE}
+### Define working folder (contains R/Rmd file for current sample, parent contains global project files)
+WORKING_DIR   = getwd();
+
+### Load parameters
+# Define an environment that will contain parameters
+paramsEnv = new.env();
+
+# Load file defining global (project) parameters in 'paramsEnv'
+source( file.path( WORKING_DIR, "..", "globalParams.R"), local = paramsEnv);
+
+# Load file defining local (sample) parameters eventually overriding global ones
+sampleParamsFilePath = file.path( WORKING_DIR, "..", "sampleParams.R");
+if(file.exists(sampleParamsFilePath)){
+  source( sampleParamsFilePath, local = paramsEnv);
+} else {
+  warning("The file 'sampleParams.R' containing sample-specific parameters is missing. The analysis will use global (project) parameters only.");
+}
+
+# Load file defining analysis parameters
+analysisParamsFilePath = file.path( WORKING_DIR, "analysisParams.R");
+if(file.exists(analysisParamsFilePath)) {
+  source( analysisParamsFilePath, local = paramsEnv);
+} else {
+  warning("The file 'analysisParamsFilePath.R' containing analysis-specific parameters is missing.");
+}
+
+# Assign loaded values to current environment (Not .GlobalEnv as it may not be the current one depending on where rendering is started from)
+invisible( lapply( ls( paramsEnv, all.names = TRUE), function(x, envir)
+  { 
+    assign( x = x, 
+            value = get( x, pos = paramsEnv), 
+            pos = envir)
+  }, 
+  environment()));
+
+### Load general Deps
+cat("<BR>WORKING_DIR=", WORKING_DIR)
+source( file.path( WORKING_DIR, "00_generalDeps.R"));
+
+# Import chunks from source files
+read_chunk( path=file.path( WORKING_DIR, "01_prepareData.R"));
+#read_chunk( path=file.path( WORKING_DIR, "90_finalize.R"));
+```
+
+---
+title: `r paste( GLOBAL_DESCRIPTION, ANALYSIS_STEP_NAME, sep ="<BR>")`
+---
+
+
+```{r initFunctions}
+
+### Create output directory
+dir.create( PATH_ANALYSIS_OUTPUT, showWarnings = FALSE);
+
+
+### Record starting time (for report and file names)
+startTime = Sys.time();
+startTimeReport   = format( startTime, "%Y %m %d %H:%M:%S")
+startTimeFileName = format( startTime, "%Y_%m_%d_%H_%M_%S")
+
+
+### Initialize utils
+
+# Create a hash for all parameters
+paramsHash = digest( paramsEnv, algo="murmur32");
+
+# Create a 'safe' unique prefix for output files
+# outputFilesPrefix = paste0( SCIENTIFIC_PROJECT_NAME, "_",     
+#                             EXPERIMENT_PROJECT_NAME, "_"
+#                             #startTimeFileName, "_",
+#                             #paramsHash, "_"
+#                             )
+
+# Set seed for pseudo random number generator
+set.seed(42);
+
+# Create a hidden empty heatmap to prevent heatmapr interference with plotly functions (bug ?)
+cat('<div style="display: none">');
+main_heatmap(matrix(0));
+cat('</div>');
+```
+
+
+
+
+## Primary analysis (QC)
+
+
+### Run informations {.tabset .tabset-fade}
+
+#### Run
+<center>
+```{r runInfo_run}
+pander( c( 'Date'     = startTimeReport,
+           'Sample'   = SAMPLE_NAME,
+           'Hash'     = paramsHash));
+```
+</center>
+
+#### Parameters
+```{r runInfo_params}
+#showSimpleDT( paramsEnv); # Does not handle lists or nested lists easily
+listParams = as.list( paramsEnv);
+pander(listParams[order(names(listParams))]); # Show params in alphabetical order
+```
+
+#### System
+<center>
+```{r runInfo_sysInfo}
+showSimpleDT( Sys.info())
+```
+</center>
+
+#### R
+```{r runInfo_r}
+pander( sessionInfo());
+```
+
+<!-- Ending the tabset section -->
+### {.toc-ignore} 
+<br /><br />
+
+### Filtering & normalization
+```{r dataLoadFilterNormalize}
+<<loadData>>
+<<filterData>>
+<<normalizeData>>
+<<saveSeuratRObject>>
+```
+<br /><br />
+
+
