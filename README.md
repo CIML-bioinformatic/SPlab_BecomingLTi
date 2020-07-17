@@ -70,20 +70,24 @@ For instance, if you have chosen to clone the Git repository in "/home/spinellil
 
 ### Download the raw data
 
-Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo and uncompressed. To download and uncompress the data, use the following code:
+Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361, [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154))and uncompressed. To download and uncompress the data, use the following code:
 
 **On linux:**
 
     cd $WORKING_DIR
-    wget URL/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
+    wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz?download=1 -O URL/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
-    wget URL/SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz
+    
+    wget https://zenodo.org/record/3946361/files/SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz
-    wget URL/SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz
+    
+    wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz
-    wget URL/SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
+    
+    wget SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
-    wget URL/SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz
+    
+    wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz
 
 Once done, you may obtain the following subfolder structure, each of them containing several files.
@@ -223,12 +227,12 @@ In order to use the snakemake workflow, please type first the following commands
 
 To run the analysis for the Embryo_Stage13.5_FetalLiver (for instance), then run the following commands:
 
-Note: here you have to manually change the "$WORKING_DIR" string in the snakemake command by the value of the environment variable (i.e the path where you clone the project) because snakemake may not interpret the variable name correctly:
+Note: you have to manually change the "$WORKING_DIR" string in the snakemake command below by the value of the environment variable (i.e the path where you clone the project) because snakemake may not interpret the variable name correctly:
 
      cd $WORKING_DIR/Embryo_Stage13.5_FetalLiver
      snakemake -r --snakefile snakefile.yml --use-singularity --singularity-args "-B $WORKING_DIR:$WORKING_DIR"
      
-To execute the analysis of the other sample, simply change fodler to the target sample and run again the same snakemake command.
+To execute the analysis of the other sample, simply change folder to the target sample and run again the same snakemake command.
 
 
 
