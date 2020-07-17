@@ -70,7 +70,7 @@ For instance, if you have chosen to clone the Git repository in "/home/spinellil
 
 ### Download the raw data
 
-Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361, [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154))and uncompressed. To download and uncompress the data, use the following code:
+Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154) and uncompressed. To download and uncompress the data, use the following code:
 
 **On linux:**
 
