@@ -70,12 +70,15 @@ For instance, if you have chosen to clone the Git repository in "/home/spinellil
 
 ### Download the raw data
 
-Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361  [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154) and uncompressed. To download and uncompress the data, use the following code:
+Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361)   
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154) 
+and uncompressed. To download and uncompress the data, use the following code:
 
 **On linux:**
 
     cd $WORKING_DIR
-    wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz?download=1 -O URL/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
+    wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Bulk_Stage13.5_2tissues_00_RawData.tar.gz
     
     wget https://zenodo.org/record/3946361/files/SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage13.5_FetalLiver_00_RawData.tar.gz
@@ -106,14 +109,14 @@ Once done, you may obtain the following subfolder structure, each of them contai
 
 ### Download the reference files
 
-The study uses references (genome annotations) you have to download. The annotations used during the study are available on Zenodo. Use the following command to download the tarball file and uncompress it.
+The study uses references (genome annotations) you have to download. The annotations used during the study are available on Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3949849.svg)](https://doi.org/10.5281/zenodo.3949849). Use the following command to download the tarball file and uncompress it.
 
 Note: Since the reference files are used for the 4 single-cell samples analysis, they must be present in all the sample folder in the same 01_Reference subfolder. Instead of copying the files, we will create symbolic links:
 
 **On linux:**
 
     cd $WORKING_DIR
-    wget URL/SPlab_BecomingLTi_01_Reference.tar.gz
+    wget https://zenodo.org/record/3949849/files/SPlab_BecomingLTi_01_Reference.tar.gz?download=1 -O SPlab_BecomingLTi_01_Reference.tar.gz
     tar zxvf SPlab_BecomingLTi_01_Reference.tar.gz
     ln -s Embryo_Stage13.5_FetalLiver/01_Reference Embryo_Stage13.5_Periphery_CellRangerV3/01_Reference
     ln -s Embryo_Stage13.5_FetalLiver/01_Reference Embryo_Stage14.5_FetalLiver/01_Reference
@@ -133,12 +136,12 @@ These commands will create 4 sub-folders named 01_Reference:
 
 ### Download the Docker and Singularity images
 
-Docker image tar file and Singularity img files are stored on Zenodo. Open a shell command and change dir to the root of the cloned Git repository (WORKING_DIR). Then execute the following commands to download the tarball file and untar  it:
+Docker image tar file and Singularity img files are stored on Zenodo [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3949849.svg)](https://doi.org/10.5281/zenodo.3949849). Open a shell command and change dir to the root of the cloned Git repository (WORKING_DIR). Then execute the following commands to download the tarball file and untar  it:
 
 **On linux:**
 
     cd $WORKING_DIR
-    wget URL/SPlab_BecomingLTi_02_containers.tar.gz
+    wget https://zenodo.org/record/3949849/files/SPlab_BecomingLTi_02_containers.tar.gz?download=1 -O SPlab_BecomingLTi_02_containers.tar.gz
     tar zxvf SPlab_BecomingLTi_02_containers.tar.gz
 
 These commands will create 2 sub-folders named 02_Container:
