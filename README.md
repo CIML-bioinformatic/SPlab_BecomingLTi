@@ -51,6 +51,7 @@ In order to prepare the environment for analysis execution, it is required to:
 
 - Clone the github repository and set the WORKING_DIR environment variable
 - Download the docker image tar file and the singularity img files
+- Install Docker and Singularity
 - Load the docker image on your system
 - Download the pre-processed data (Count table for bulk RNA-seq and CellRanger results for single-cell RNA-seq)
 
@@ -70,10 +71,9 @@ For instance, if you have chosen to clone the Git repository in "/home/spinellil
 
 ### Download the raw data
 
-Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361)   
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154) 
-and uncompressed. To download and uncompress the data, use the following code:
+Each sample needs its own "00_RawData" sub-folder containing the initial data used by the analysis. Those data can be downloaded from Zenodo and uncompressed [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946361.svg)](https://doi.org/10.5281/zenodo.3946361) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3947819.svg)](https://doi.org/10.5281/zenodo.3947819) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3946154.svg)](https://doi.org/10.5281/zenodo.3946154).
+
+To download and uncompress the data, use the following code:
 
 **On linux:**
 
@@ -87,7 +87,7 @@ and uncompressed. To download and uncompress the data, use the following code:
     wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage13.5_Periphery_CellRangerV3_00_RawData.tar.gz
     
-    wget SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
+    wget https://zenodo.org/record/3947819/files/SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
     tar zxvf SPlab_BecomingLTi_Stage14.5_FetalLiver_00_RawData.tar.gz
     
     wget https://zenodo.org/record/3946154/files/SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz?download=1 -O SPlab_BecomingLTi_Stage14.5_Periphery_CellRangerV3_00_RawData.tar.gz
@@ -161,6 +161,14 @@ The first one contains a Docker image tar file used for the bulk RNA-seq analysi
     ln -s Embryo_Stage13.5_FetalLiver/02_Container Embryo_Stage14.5_FetalLiver/02_Container
     ln -s Embryo_Stage13.5_FetalLiver/02_Container Embryo_Stage14.5_Periphery_CellRangerV3/02_Container
 
+### Install Docker and Singularity
+
+You need to install Docker and Singularity v2.6 on your system.
+
+- To install Docker, follow the instructions here : https://docs.docker.com/get-docker/
+
+- To install Singularity v2.6, follow the instructions here : https://sylabs.io/guides/2.6/admin-guide/
+
 ### Load docker images on the system
 
 In order to execute analysis of the bulk RNA-seq, you must load the provided docker image onto your Docker. Docker must be installed on your system. 
@@ -173,7 +181,7 @@ Open a shell command and type:
 
 This command may take some time. If you encounter an issue loading some docker image layer, try again. Sometimes issue would be resolved. 
 
-### Install Snakemake (optional)
+### Install Snakemake
 
 If you want to take advantage of the workflow management we used for the single-cell RNA-seq analysis, you have to install Snakemake. See the official instruction and use your prefered solution:
 
