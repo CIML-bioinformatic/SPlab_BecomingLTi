@@ -18,6 +18,7 @@
 **Summary:**
 During embryogenesis Lymphoid Tissue Inducer (LTi) cells are essential for lymph node organogenesis. These cells are part of the Innate Lymphoid Cell (ILC) family. Although their earliest embryonic hematopoietic origin is unclear, other innate immune cells were shown to be derived from both early hemogenic endothelium in the yolk-sac as well as the aorta-gonad-mesonephros. A proper model to discriminate between these locations was unavailable. In this study, using a new Cxcr4-CreERT2 lineage tracing model, we identify a major contribution from embryonic hemogenic endothelium, but not yolk-sac, towards the LTi progenitors. Conversely, embryonic LTi cells are replaced by hematopoietic stem cell derived cells in adult. We further show that within the fetal liver common lymphoid progenitors differentiate into highly dynamic alpha-lymphoid precursor cells, which at this embryonic stage preferentially mature into LTi precursors and establish their functional LTi cell identity only after reaching the periphery.
 
+[![DOI]](https://doi.org/10.1016/j.celrep.2020.108004) 
 
 ---
 ---
